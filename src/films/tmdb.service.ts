@@ -14,11 +14,11 @@ const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 export interface FilmTmdb {
   tmdbId: number;
   titre: string;
-  description: string | null;
-  affiche: string | null;
-  duree: number | null;
-  genre: string | null;
-  note: number | null;
+  description?: string;
+  affiche?: string;
+  duree?: number;
+  genre?: string;
+  note?: number;
 }
 
 @Injectable()
@@ -73,15 +73,15 @@ export class TmdbService {
     return {
       tmdbId: film.id,
       titre: film.title,
-      description: film.overview ?? null,
+      description: film.overview ?? undefined,
       affiche: film.poster_path
         ? `${TMDB_IMAGE_BASE_URL}${film.poster_path}`
-        : null,
-      duree: film.runtime ?? null,
+        : undefined,
+      duree: film.runtime ?? undefined,
       genre: Array.isArray(film.genres)
         ? film.genres.map((g: any) => g.name).join(', ')
-        : null,
-      note: film.vote_average ?? null,
+        : undefined,
+      note: film.vote_average ?? undefined,
     };
   }
 }
