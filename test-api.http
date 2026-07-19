@@ -1,0 +1,157 @@
+### Fichier de test de l'API "La Zone" — format REST Client (extension VS Code)
+### Utiliser le bouton "Send Request" au-dessus de chaque bloc.
+### Le serveur doit tourner en local : npm run start:dev
+
+@baseUrl = http://localhost:3000
+
+@userEmail = user.test@lazone.fr
+@userPassword = motdepasse123
+
+@adminEmail = admin.test@lazone.fr
+@adminPassword = motdepasse123
+
+
+### =========================================================
+### AUTH — inscription et connexion d'un utilisateur standard
+### =========================================================
+
+### Inscription d'un utilisateur standard
+# @name registerUser
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{userEmail}}",
+  "password": "{{userPassword}}",
+  "nom": "Dupont",
+  "prenom": "Jean"
+}
+
+### Connexion de l'utilisateur standard
+# @name loginUser
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{userEmail}}",
+  "password": "{{userPassword}}"
+}
+
+@userToken = {{loginUser.response.body.accessToken}}
+
+### Profil de l'utilisateur connecté
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer {{userToken}}
+
+
+### =========================================================
+### AUTH — création d'un compte admin
+### =========================================================
+### L'API n'a pas de route d'inscription "admin" : le rôle par défaut
+### est toujours "user". Pour tester les routes admin :
+###   1. Exécuter la requête "registerAdmin" ci-dessous
+###   2. Promouvoir ce compte en base :
+###      docker exec lazone-db psql -U postgres -d lazone -c
+###        "UPDATE users SET role = 'admin' WHERE email = 'admin.test@lazone.fr'"
+###   3. Exécuter "loginAdmin" (le nouveau token contiendra role = admin)
+
+### Inscription du futur compte admin
+# @name registerAdmin
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}",
+  "nom": "Martin",
+  "prenom": "Alice"
+}
+
+### Connexion admin (à exécuter APRÈS la promotion SQL ci-dessus)
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+@adminToken = {{loginAdmin.response.body.accessToken}}
+
+
+### =========================================================
+### FILMS — routes publiques
+### =========================================================
+
+### Liste des films en base
+GET {{baseUrl}}/films
+
+### Films populaires TMDB (proxy public)
+GET {{baseUrl}}/films/tmdb/populaires
+
+### Recherche TMDB (proxy public)
+GET {{baseUrl}}/films/tmdb/recherche?query=inception
+
+
+### =========================================================
+### FILMS — routes admin
+### =========================================================
+
+### Import d'un film depuis TMDB (avec token admin) — 550 = Fight Club
+# @name importFilm
+POST {{baseUrl}}/films/import/550
+Authorization: Bearer {{adminToken}}
+
+@filmId = {{importFilm.response.body.id}}
+
+### Détail du film importé
+GET {{baseUrl}}/films/{{filmId}}
+
+### Modification du film (avec token admin)
+PATCH {{baseUrl}}/films/{{filmId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "note": 9.5
+}
+
+### Suppression du film (avec token admin) — attend 204 No Content
+DELETE {{baseUrl}}/films/{{filmId}}
+Authorization: Bearer {{adminToken}}
+
+
+### =========================================================
+### CAS D'ERREUR ATTENDUS
+### =========================================================
+
+### 401 — import TMDB sans token
+POST {{baseUrl}}/films/import/550
+
+### 403 — import TMDB avec un token "user" (rôle insuffisant)
+POST {{baseUrl}}/films/import/550
+Authorization: Bearer {{userToken}}
+
+### 401 — GET /auth/profile sans token
+GET {{baseUrl}}/auth/profile
+
+### 409 — double inscription avec le même email
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{userEmail}}",
+  "password": "{{userPassword}}",
+  "nom": "Dupont",
+  "prenom": "Jean"
+}
+
+### 401 — mauvais mot de passe à la connexion
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{userEmail}}",
+  "password": "mauvais_mot_de_passe"
+}
