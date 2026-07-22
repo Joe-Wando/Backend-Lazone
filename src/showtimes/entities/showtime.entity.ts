@@ -3,12 +3,14 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  OneToMany,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Film } from '../../films/entities/film.entity';
 import { Salle } from '../../salles/entities/salle.entity';
+import { Reservation } from '../../reservations/entities/reservation.entity';
 
 @Entity('showtimes')
 export class Showtime {
@@ -43,6 +45,9 @@ export class Showtime {
   })
   @JoinColumn({ name: 'salleId' })
   salle: Salle;
+
+  @OneToMany(() => Reservation, (reservation) => reservation.showtime)
+  reservations: Reservation[];
 
   @CreateDateColumn()
   createdAt: Date;
