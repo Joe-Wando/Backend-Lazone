@@ -2,9 +2,11 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Salle } from '../../salles/entities/salle.entity';
 
 @Entity('cinemas')
 export class Cinema {
@@ -22,6 +24,9 @@ export class Cinema {
 
   @Column({ nullable: true })
   telephone: string;
+
+  @OneToMany(() => Salle, (salle) => salle.cinema)
+  salles: Salle[];
 
   @CreateDateColumn()
   createdAt: Date;

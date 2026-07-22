@@ -5,6 +5,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { FilmsModule } from './films/films.module';
 import { CinemasModule } from './cinemas/cinemas.module';
+import { SallesModule } from './salles/salles.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -25,6 +26,7 @@ import { CinemasModule } from './cinemas/cinemas.module';
     AuthModule,
     FilmsModule,
     CinemasModule,
+    SallesModule,
   ],
 })
 export class AppModule {}
