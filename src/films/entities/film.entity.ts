@@ -2,9 +2,11 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Showtime } from '../../showtimes/entities/showtime.entity';
 
 @Entity('films')
 export class Film {
@@ -31,6 +33,9 @@ export class Film {
 
   @Column({ type: 'float', nullable: true })
   note: number;
+
+  @OneToMany(() => Showtime, (showtime) => showtime.film)
+  showtimes: Showtime[];
 
   @CreateDateColumn()
   createdAt: Date;
