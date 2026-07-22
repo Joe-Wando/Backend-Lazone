@@ -7,6 +7,8 @@ import { FilmsModule } from './films/films.module';
 import { CinemasModule } from './cinemas/cinemas.module';
 import { SallesModule } from './salles/salles.module';
 import { ShowtimesModule } from './showtimes/showtimes.module';
+import { ReservationsModule } from './reservations/reservations.module';
+import { TicketsModule } from './tickets/tickets.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -29,6 +31,8 @@ import { ShowtimesModule } from './showtimes/showtimes.module';
     CinemasModule,
     SallesModule,
     ShowtimesModule,
+    ReservationsModule,
+    TicketsModule,
   ],
 })
 export class AppModule {}
