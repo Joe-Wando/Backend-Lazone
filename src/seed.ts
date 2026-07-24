@@ -19,7 +19,34 @@ import { ReservationsService } from './reservations/reservations.service';
 import { Reservation } from './reservations/entities/reservation.entity';
 import { Ticket } from './tickets/entities/ticket.entity';
 
-const TMDB_IDS_A_IMPORTER = [550, 27205, 155];
+const TMDB_IDS_IMPOSES = [
+  550, // Fight Club
+  27205, // Inception
+  155, // The Dark Knight
+];
+
+const GENRE_TMDB_ANIMATION = 16;
+const NB_FILMS_GENERALISTES = 25;
+const NB_FILMS_ANIME = 25;
+const NB_PAGES_MAX_PAR_DECOUVERTE = 10;
+
+async function collecterIdsParDecouverte(
+  tmdbService: TmdbService,
+  options: { avecGenres?: number; sansGenres?: number },
+  quantite: number,
+): Promise<number[]> {
+  const ids: number[] = [];
+  let page = 1;
+  while (ids.length < quantite && page <= NB_PAGES_MAX_PAR_DECOUVERTE) {
+    const resultats = await tmdbService.decouvrirParGenre({ ...options, page });
+    if (resultats.length === 0) {
+      break;
+    }
+    ids.push(...resultats.map((film) => film.tmdbId));
+    page++;
+  }
+  return ids.slice(0, quantite);
+}
 
 async function viderLesTables(app: Awaited<ReturnType<typeof NestFactory.createApplicationContext>>) {
   const ticketRepository: Repository<Ticket> = app.get(getRepositoryToken(Ticket));
@@ -112,9 +139,28 @@ async function bootstrap() {
     const salles = [salle1, salle2];
     console.log(`2 salles créées`);
 
-    // --- Films (import TMDB) ---
+    // --- Découverte des films à importer via TMDB ---
+    const idsGeneralistes = await collecterIdsParDecouverte(
+      tmdbService,
+      { sansGenres: GENRE_TMDB_ANIMATION },
+      NB_FILMS_GENERALISTES,
+    );
+    const idsAnime = await collecterIdsParDecouverte(
+      tmdbService,
+      { avecGenres: GENRE_TMDB_ANIMATION },
+      NB_FILMS_ANIME,
+    );
+    console.log(
+      `Découverte TMDB : ${idsGeneralistes.length} films généralistes, ${idsAnime.length} films d'animation`,
+    );
+
+    const idsAImporter = Array.from(
+      new Set([...TMDB_IDS_IMPOSES, ...idsGeneralistes, ...idsAnime]),
+    );
+
+    // --- Films (détails complets par film via getFilmParId) ---
     const films: Film[] = [];
-    for (const tmdbId of TMDB_IDS_A_IMPORTER) {
+    for (const tmdbId of idsAImporter) {
       try {
         const filmTmdb = await tmdbService.getFilmParId(tmdbId);
         const film = await filmsService.create(filmTmdb);
@@ -127,7 +173,7 @@ async function bootstrap() {
         );
       }
     }
-    console.log(`${films.length}/${TMDB_IDS_A_IMPORTER.length} films importés depuis TMDB`);
+    console.log(`${films.length}/${idsAImporter.length} films importés depuis TMDB`);
 
     if (films.length === 0) {
       console.warn(
@@ -136,10 +182,10 @@ async function bootstrap() {
       return;
     }
 
-    // --- Séances (6, en combinant films et salles) ---
+    // --- Séances (une par film, salles alternées) ---
     const showtimes: Showtime[] = [];
-    for (let i = 0; i < 6; i++) {
-      const film = films[i % films.length];
+    for (let i = 0; i < films.length; i++) {
+      const film = films[i];
       const salle = salles[i % salles.length];
       const showtime = await showtimesService.create({
         filmId: film.id,
