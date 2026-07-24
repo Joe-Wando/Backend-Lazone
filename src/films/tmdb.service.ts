@@ -21,6 +21,12 @@ export interface FilmTmdb {
   note?: number;
 }
 
+export interface OptionsDecouverte {
+  avecGenres?: number;
+  sansGenres?: number;
+  page?: number;
+}
+
 @Injectable()
 export class TmdbService {
   constructor(
@@ -40,6 +46,21 @@ export class TmdbService {
 
   async rechercher(query: string): Promise<FilmTmdb[]> {
     const data = await this.appelerTmdb('/search/movie', { query });
+    return data.results.map((film: any) => this.mapperFilm(film));
+  }
+
+  async decouvrirParGenre(options: OptionsDecouverte = {}): Promise<FilmTmdb[]> {
+    const params: Record<string, string | number> = {
+      page: options.page ?? 1,
+      sort_by: 'popularity.desc',
+    };
+    if (options.avecGenres) {
+      params.with_genres = options.avecGenres;
+    }
+    if (options.sansGenres) {
+      params.without_genres = options.sansGenres;
+    }
+    const data = await this.appelerTmdb('/discover/movie', params);
     return data.results.map((film: any) => this.mapperFilm(film));
   }
 
