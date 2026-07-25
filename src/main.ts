@@ -14,7 +14,12 @@ async function bootstrap() {
     }),
   );
 
-  app.enableCors();
+  app.enableCors({
+    origin: [
+      'https://la-zone-navy.vercel.app',
+      'http://localhost:5173',
+    ],
+  });
 
   const config = new DocumentBuilder()
     .setTitle('La Zone — API')
@@ -27,7 +32,6 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
-  await app.listen(3000);
+  await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

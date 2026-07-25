@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ShowtimesService } from './showtimes.service';
@@ -24,8 +25,8 @@ export class ShowtimesController {
   constructor(private readonly showtimesService: ShowtimesService) {}
 
   @Get()
-  findAll() {
-    return this.showtimesService.findAll();
+  findAll(@Query('filmId') filmId?: string) {
+    return this.showtimesService.findAll(filmId);
   }
 
   @Get(':id')
