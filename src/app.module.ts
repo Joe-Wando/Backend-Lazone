@@ -22,7 +22,7 @@ import { TicketsModule } from './tickets/tickets.module';
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_NAME'),
         autoLoadEntities: true,
-        synchronize: true,
+        synchronize: false,
       }),
     }),
     UsersModule,
