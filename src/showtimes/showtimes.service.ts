@@ -23,8 +23,10 @@ export class ShowtimesService {
     return this.showtimeRepository.save(showtime);
   }
 
-  async findAll(): Promise<Showtime[]> {
-    return this.showtimeRepository.find();
+  async findAll(filmId?: string): Promise<Showtime[]> {
+    return this.showtimeRepository.find({
+      where: filmId ? { film: { id: filmId } } : {},
+    });
   }
 
   async findOne(id: string): Promise<Showtime> {
