@@ -10,9 +10,6 @@ import {
 } from '../reservations/entities/reservation.entity';
 
 const NABOOPAY_BASE_URL = 'https://api.naboopay.com';
-// URLs provisoires en attendant l'intégration frontend (cf. tâche "Frontend" à venir).
-const FRONTEND_SUCCESS_URL = 'https://la-zone-navy.vercel.app/paiement/succes';
-const FRONTEND_ERROR_URL = 'https://la-zone-navy.vercel.app/paiement/echec';
 
 export interface ResultatTransaction {
   orderId: string;
@@ -33,6 +30,7 @@ export class PaiementService {
     montant: number,
     description: string,
   ): Promise<ResultatTransaction> {
+    const frontendUrl = this.configService.get('FRONTEND_URL');
     try {
       const response = await firstValueFrom(
         // NabooPay expose la création de transaction en v1 (PUT), alors que la
@@ -55,8 +53,8 @@ export class PaiementService {
                 description,
               },
             ],
-            success_url: FRONTEND_SUCCESS_URL,
-            error_url: FRONTEND_ERROR_URL,
+            success_url: `${frontendUrl}/paiement/succes`,
+            error_url: `${frontendUrl}/paiement/erreur`,
             is_escrow: false,
           },
         }),
