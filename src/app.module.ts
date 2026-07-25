@@ -9,6 +9,7 @@ import { SallesModule } from './salles/salles.module';
 import { ShowtimesModule } from './showtimes/showtimes.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { TicketsModule } from './tickets/tickets.module';
+import { PaiementModule } from './paiement/paiement.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -33,6 +34,7 @@ import { TicketsModule } from './tickets/tickets.module';
     ShowtimesModule,
     ReservationsModule,
     TicketsModule,
+    PaiementModule,
   ],
 })
 export class AppModule {}
