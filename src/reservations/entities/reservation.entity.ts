@@ -13,6 +13,7 @@ import { Showtime } from '../../showtimes/entities/showtime.entity';
 import { Ticket } from '../../tickets/entities/ticket.entity';
 
 export enum StatutReservation {
+  PENDING = 'pending',
   CONFIRMED = 'confirmed',
   CANCELLED = 'cancelled',
 }
@@ -31,9 +32,15 @@ export class Reservation {
   @Column({
     type: 'enum',
     enum: StatutReservation,
-    default: StatutReservation.CONFIRMED,
+    default: StatutReservation.PENDING,
   })
   statut: StatutReservation;
+
+  @Column({ nullable: true })
+  orderId?: string;
+
+  @Column({ type: 'float', nullable: true })
+  montantAPayer?: number;
 
   @Column()
   userId: string;
