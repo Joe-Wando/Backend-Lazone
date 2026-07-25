@@ -14,7 +14,12 @@ async function bootstrap() {
     }),
   );
 
-  app.enableCors();
+  app.enableCors({
+    origin: [
+      'https://la-zone-navy.vercel.app',
+      'http://localhost:5173',
+    ],
+  });
 
   const config = new DocumentBuilder()
     .setTitle('La Zone — API')
