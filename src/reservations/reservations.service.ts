@@ -12,6 +12,7 @@ import { Ticket } from '../tickets/entities/ticket.entity';
 import { Showtime } from '../showtimes/entities/showtime.entity';
 import { User, UserRole } from '../users/entities/user.entity';
 import { CreateReservationDto } from './dto/create-reservation.dto';
+import { PaiementService } from '../paiement/paiement.service';
 
 @Injectable()
 export class ReservationsService {
@@ -19,9 +20,13 @@ export class ReservationsService {
     @InjectRepository(Reservation)
     private readonly reservationRepository: Repository<Reservation>,
     private readonly dataSource: DataSource,
+    private readonly paiementService: PaiementService,
   ) {}
 
-  async create(userId: string, dto: CreateReservationDto): Promise<Reservation> {
+  async create(
+    userId: string,
+    dto: CreateReservationDto,
+  ): Promise<Reservation & { checkoutUrl: string }> {
     return this.dataSource.transaction(async (manager) => {
       const showtime = await manager.findOne(Showtime, {
         where: { id: dto.showtimeId },
@@ -56,7 +61,7 @@ export class ReservationsService {
         showtimeId: dto.showtimeId,
         nbPlaces: dto.nbPlaces,
         prixTotal,
-        statut: StatutReservation.CONFIRMED,
+        statut: StatutReservation.PENDING,
         tickets,
       });
 
@@ -65,7 +70,19 @@ export class ReservationsService {
       showtime.placesReservees += dto.nbPlaces;
       await manager.save(showtime);
 
-      return saved;
+      // Appel NabooPay dans la même transaction : si le paiement ne peut pas
+      // être initié, toute la réservation (places incluses) est annulée.
+      const { orderId, checkoutUrl, montantAPayer } =
+        await this.paiementService.creerTransaction(
+          prixTotal,
+          `Réservation ${dto.nbPlaces} place(s) - ${showtime.film.titre}`,
+        );
+
+      saved.orderId = orderId;
+      saved.montantAPayer = montantAPayer;
+      await manager.save(saved);
+
+      return Object.assign(saved, { checkoutUrl });
     });
   }
 
