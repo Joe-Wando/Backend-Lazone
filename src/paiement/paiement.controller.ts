@@ -46,14 +46,17 @@ export class PaiementController {
       throw new UnauthorizedException('Signature invalide');
     }
 
-    if (payload.transaction_status === 'completed') {
+    // La doc publique NabooPay annonce "completed", mais la valeur réellement
+    // envoyée pour un paiement réussi est "paid" (constaté en production, cf.
+    // logs du 26/07/2026).
+    if (payload.transaction_status === 'paid') {
       this.logger.log(
-        `transaction_status=completed, confirmation de la réservation pour order_id=${payload.order_id}`,
+        `transaction_status=paid, confirmation de la réservation pour order_id=${payload.order_id}`,
       );
       await this.paiementService.confirmerParOrderId(payload.order_id);
     } else {
       this.logger.log(
-        `transaction_status=${payload.transaction_status} ignoré (pas "completed") pour order_id=${payload.order_id}`,
+        `transaction_status=${payload.transaction_status} ignoré (pas "paid") pour order_id=${payload.order_id}`,
       );
     }
 
