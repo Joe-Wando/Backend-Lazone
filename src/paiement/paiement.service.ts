@@ -1,4 +1,4 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -19,6 +19,8 @@ export interface ResultatTransaction {
 
 @Injectable()
 export class PaiementService {
+  private readonly logger = new Logger(PaiementService.name);
+
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
@@ -73,16 +75,29 @@ export class PaiementService {
   }
 
   async confirmerParOrderId(orderId: string): Promise<void> {
+    this.logger.log(`Recherche de la réservation pour orderId=${orderId}`);
     const reservation = await this.reservationRepository.findOne({
       where: { orderId },
     });
+
     if (!reservation) {
+      this.logger.warn(`Aucune réservation trouvée pour orderId=${orderId}`);
       return;
     }
+
+    this.logger.log(
+      `Réservation ${reservation.id} trouvée, statut actuel=${reservation.statut}`,
+    );
+
     if (reservation.statut !== StatutReservation.PENDING) {
+      this.logger.log(
+        `Réservation ${reservation.id} déjà au statut ${reservation.statut}, aucune action (idempotence)`,
+      );
       return;
     }
+
     reservation.statut = StatutReservation.CONFIRMED;
     await this.reservationRepository.save(reservation);
+    this.logger.log(`Réservation ${reservation.id} passée à CONFIRMED`);
   }
 }
