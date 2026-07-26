@@ -1,4 +1,4 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -10,9 +10,6 @@ import {
 } from '../reservations/entities/reservation.entity';
 
 const NABOOPAY_BASE_URL = 'https://api.naboopay.com';
-// URLs provisoires en attendant l'intégration frontend (cf. tâche "Frontend" à venir).
-const FRONTEND_SUCCESS_URL = 'https://la-zone-navy.vercel.app/paiement/succes';
-const FRONTEND_ERROR_URL = 'https://la-zone-navy.vercel.app/paiement/echec';
 
 export interface ResultatTransaction {
   orderId: string;
@@ -22,6 +19,8 @@ export interface ResultatTransaction {
 
 @Injectable()
 export class PaiementService {
+  private readonly logger = new Logger(PaiementService.name);
+
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
@@ -33,6 +32,7 @@ export class PaiementService {
     montant: number,
     description: string,
   ): Promise<ResultatTransaction> {
+    const frontendUrl = this.configService.get('FRONTEND_URL');
     try {
       const response = await firstValueFrom(
         // NabooPay expose la création de transaction en v1 (PUT), alors que la
@@ -55,8 +55,8 @@ export class PaiementService {
                 description,
               },
             ],
-            success_url: FRONTEND_SUCCESS_URL,
-            error_url: FRONTEND_ERROR_URL,
+            success_url: `${frontendUrl}/paiement/succes`,
+            error_url: `${frontendUrl}/paiement/erreur`,
             is_escrow: false,
           },
         }),
@@ -75,16 +75,29 @@ export class PaiementService {
   }
 
   async confirmerParOrderId(orderId: string): Promise<void> {
+    this.logger.log(`Recherche de la réservation pour orderId=${orderId}`);
     const reservation = await this.reservationRepository.findOne({
       where: { orderId },
     });
+
     if (!reservation) {
+      this.logger.warn(`Aucune réservation trouvée pour orderId=${orderId}`);
       return;
     }
+
+    this.logger.log(
+      `Réservation ${reservation.id} trouvée, statut actuel=${reservation.statut}`,
+    );
+
     if (reservation.statut !== StatutReservation.PENDING) {
+      this.logger.log(
+        `Réservation ${reservation.id} déjà au statut ${reservation.statut}, aucune action (idempotence)`,
+      );
       return;
     }
+
     reservation.statut = StatutReservation.CONFIRMED;
     await this.reservationRepository.save(reservation);
+    this.logger.log(`Réservation ${reservation.id} passée à CONFIRMED`);
   }
 }
