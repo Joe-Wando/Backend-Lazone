@@ -12,5 +12,20 @@ services:
     volumes:
       - lazone-data:/var/lib/postgresql/data
 
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lazone-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: postgres
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+
 volumes:
   lazone-data:
