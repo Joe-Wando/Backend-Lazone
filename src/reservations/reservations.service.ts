@@ -7,12 +7,15 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { randomBytes } from 'crypto';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { Counter } from 'prom-client';
 import { Reservation, StatutReservation } from './entities/reservation.entity';
 import { Ticket } from '../tickets/entities/ticket.entity';
 import { Showtime } from '../showtimes/entities/showtime.entity';
 import { User, UserRole } from '../users/entities/user.entity';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { PaiementService } from '../paiement/paiement.service';
+import { PAIEMENTS_TOTAL, RESERVATIONS_TOTAL } from '../metrics/metrics.constants';
 
 @Injectable()
 export class ReservationsService {
@@ -21,6 +24,10 @@ export class ReservationsService {
     private readonly reservationRepository: Repository<Reservation>,
     private readonly dataSource: DataSource,
     private readonly paiementService: PaiementService,
+    @InjectMetric(RESERVATIONS_TOTAL)
+    private readonly reservationsTotal: Counter<string>,
+    @InjectMetric(PAIEMENTS_TOTAL)
+    private readonly paiementsTotal: Counter<string>,
   ) {}
 
   async create(
@@ -82,6 +89,8 @@ export class ReservationsService {
       saved.montantAPayer = montantAPayer;
       await manager.save(saved);
 
+      this.reservationsTotal.inc();
+
       return Object.assign(saved, { checkoutUrl });
     });
   }
@@ -122,6 +131,8 @@ export class ReservationsService {
       reservation.statut = StatutReservation.CANCELLED;
       await manager.save(reservation);
       await this.recrediterPlaces(manager, reservation);
+
+      this.paiementsTotal.inc({ statut: 'cancelled' });
 
       return reservation;
     });
