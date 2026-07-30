@@ -14,6 +14,7 @@ import { REDIS_CLIENT } from './redis.constants';
         new Redis({
           host: config.get('REDIS_HOST'),
           port: +config.get('REDIS_PORT'),
+          password: config.get('REDIS_PASSWORD') || undefined,
         }),
     },
     RedisService,
