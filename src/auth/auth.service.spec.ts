@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { UserRole } from '../users/entities/user.entity';
+import { RedisService } from '../redis/redis.service';
 
 jest.mock('bcrypt');
 
@@ -41,6 +42,7 @@ describe('AuthService', () => {
         AuthService,
         { provide: UsersService, useValue: usersService },
         { provide: JwtService, useValue: jwtService },
+        { provide: RedisService, useValue: {} },
       ],
     }).compile();
 
