@@ -5,8 +5,11 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
+import { ExtractJwt } from 'passport-jwt';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -33,5 +36,16 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   getProfile(@CurrentUser() user: User) {
     return user;
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  async logout(@Req() request: Request) {
+    const token = ExtractJwt.fromAuthHeaderAsBearerToken()(request);
+    if (token) {
+      await this.authService.logout(token);
+    }
+    return { message: 'Déconnexion réussie' };
   }
 }
