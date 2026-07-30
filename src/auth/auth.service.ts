@@ -9,12 +9,15 @@ import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { User } from '../users/entities/user.entity';
+import { RedisService } from '../redis/redis.service';
+import { CLE_TOKEN_REVOQUE } from './auth.constants';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly redisService: RedisService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -45,6 +48,17 @@ export class AuthService {
     }
 
     return this.genererReponse(user);
+  }
+
+  async logout(token: string): Promise<void> {
+    const decode = this.jwtService.decode(token) as { exp?: number } | null;
+    if (!decode?.exp) {
+      return;
+    }
+    const secondesRestantes = decode.exp - Math.floor(Date.now() / 1000);
+    if (secondesRestantes > 0) {
+      await this.redisService.set(CLE_TOKEN_REVOQUE(token), '1', secondesRestantes);
+    }
   }
 
   private genererReponse(user: User) {
