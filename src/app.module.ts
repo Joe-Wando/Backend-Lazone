@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { FilmsModule } from './films/films.module';
@@ -35,6 +36,7 @@ import { PaiementModule } from './paiement/paiement.module';
     ReservationsModule,
     TicketsModule,
     PaiementModule,
+    PrometheusModule.register(),
   ],
 })
 export class AppModule {}
