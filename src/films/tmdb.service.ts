@@ -7,6 +7,9 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
+import { RedisService } from '../redis/redis.service';
+
+const CACHE_TTL_SECONDES = 600; // 10 minutes
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -32,11 +35,20 @@ export class TmdbService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    private readonly redisService: RedisService,
   ) {}
 
   async getFilmsPopulaires(page = 1): Promise<FilmTmdb[]> {
+    const cleCache = `tmdb:populaires:page:${page}`;
+    const enCache = await this.redisService.get(cleCache);
+    if (enCache) {
+      return JSON.parse(enCache);
+    }
+
     const data = await this.appelerTmdb('/movie/popular', { page });
-    return data.results.map((film: any) => this.mapperFilm(film));
+    const films = data.results.map((film: any) => this.mapperFilm(film));
+    await this.redisService.set(cleCache, JSON.stringify(films), CACHE_TTL_SECONDES);
+    return films;
   }
 
   async getFilmParId(tmdbId: number): Promise<FilmTmdb> {
@@ -45,8 +57,16 @@ export class TmdbService {
   }
 
   async rechercher(query: string): Promise<FilmTmdb[]> {
+    const cleCache = `tmdb:recherche:${query.toLowerCase()}`;
+    const enCache = await this.redisService.get(cleCache);
+    if (enCache) {
+      return JSON.parse(enCache);
+    }
+
     const data = await this.appelerTmdb('/search/movie', { query });
-    return data.results.map((film: any) => this.mapperFilm(film));
+    const films = data.results.map((film: any) => this.mapperFilm(film));
+    await this.redisService.set(cleCache, JSON.stringify(films), CACHE_TTL_SECONDES);
+    return films;
   }
 
   async decouvrirParGenre(options: OptionsDecouverte = {}): Promise<FilmTmdb[]> {
