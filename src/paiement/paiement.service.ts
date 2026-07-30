@@ -4,10 +4,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { firstValueFrom } from 'rxjs';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { Counter } from 'prom-client';
 import {
   Reservation,
   StatutReservation,
 } from '../reservations/entities/reservation.entity';
+import { PAIEMENTS_TOTAL } from '../metrics/metrics.constants';
 
 const NABOOPAY_BASE_URL = 'https://api.naboopay.com';
 
@@ -26,6 +29,8 @@ export class PaiementService {
     private readonly configService: ConfigService,
     @InjectRepository(Reservation)
     private readonly reservationRepository: Repository<Reservation>,
+    @InjectMetric(PAIEMENTS_TOTAL)
+    private readonly paiementsTotal: Counter<string>,
   ) {}
 
   async creerTransaction(
@@ -98,6 +103,7 @@ export class PaiementService {
 
     reservation.statut = StatutReservation.CONFIRMED;
     await this.reservationRepository.save(reservation);
+    this.paiementsTotal.inc({ statut: 'confirmed' });
     this.logger.log(`Réservation ${reservation.id} passée à CONFIRMED`);
   }
 }

@@ -5,11 +5,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { getToken } from '@willsoto/nestjs-prometheus';
 import { DataSource } from 'typeorm';
 import { ReservationsService } from './reservations.service';
 import { Reservation, StatutReservation } from './entities/reservation.entity';
 import { PaiementService } from '../paiement/paiement.service';
 import { User, UserRole } from '../users/entities/user.entity';
+import { PAIEMENTS_TOTAL, RESERVATIONS_TOTAL } from '../metrics/metrics.constants';
 
 describe('ReservationsService', () => {
   let service: ReservationsService;
@@ -35,6 +37,8 @@ describe('ReservationsService', () => {
         { provide: getRepositoryToken(Reservation), useValue: {} },
         { provide: DataSource, useValue: dataSource },
         { provide: PaiementService, useValue: {} },
+        { provide: getToken(RESERVATIONS_TOTAL), useValue: { inc: jest.fn() } },
+        { provide: getToken(PAIEMENTS_TOTAL), useValue: { inc: jest.fn() } },
       ],
     }).compile();
 
