@@ -6,23 +6,26 @@ Projet d'examen final — Licence 2 Génie Informatique, 2025-2026.
 
 - Frontend : https://github.com/Joe-Wando/La-Zone
 - Démo frontend : https://la-zone-navy.vercel.app
-- Backendf : https://github.com/Joe-Wando/La-zone-backend
+- Backend : https://github.com/Joe-Wando/La-zone-backend
 
 ## Stack technique
 
 - NestJS + TypeScript
 - PostgreSQL + TypeORM
+- Redis (cache TMDB + révocation JWT)
 - Authentification JWT + RBAC
 - API externe : TMDB
+- Paiement : NabooPay
+- Monitoring : Prometheus + Grafana
 - Docker
 
 ## Équipe
 
 | Nom | Rôle |
 |---|---|
-| Jonathan Wando | Chef de projet — auth, users, configuration, documentation|
-| Coumba BA | Films, cinémas, salles, séances |
-| Précieux NZINOUNOU | Réservations, tickets |
+| Jonathan Wando | Chef de projet — auth, users, configuration, monitoring |
+| Coumba BA | Films, cinémas, salles, séances, documentation |
+| Précieux NZINOUNOU | Réservations, tickets, tests |
 
 ## Installation
 
@@ -33,11 +36,24 @@ git clone https://github.com/Joe-Wando/La-Zone-Backend.git
 cd La-Zone-Backend
 npm install
 cp .env.example .env   # puis remplir les valeurs
-docker compose up -d
+docker compose up -d postgres redis prometheus grafana
 npm run start:dev
 ```
 
 L'API démarre sur http://localhost:3000
+
+Documentation Swagger interactive : http://localhost:3000/api
+
+## Tests
+
+```bash
+npm run test        # tests unitaires
+npm run test:e2e    # tests end-to-end
+```
+
+## Documentation
+
+Voir le dossier [`docs/`](./docs) — diagrammes d'architecture des modules, entité-relation, flux d'authentification JWT, et présentation du projet (réalisés par Coumba BA).
 
 ## Conventions Git
 
