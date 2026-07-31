@@ -83,6 +83,7 @@ export class ReservationsService {
         await this.paiementService.creerTransaction(
           prixTotal,
           `Réservation ${dto.nbPlaces} place(s) - ${showtime.film.titre}`,
+          saved.id,
         );
 
       saved.orderId = orderId;

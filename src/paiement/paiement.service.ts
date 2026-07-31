@@ -36,6 +36,7 @@ export class PaiementService {
   async creerTransaction(
     montant: number,
     description: string,
+    reservationId: string,
   ): Promise<ResultatTransaction> {
     const frontendUrl = this.configService.get('FRONTEND_URL');
     try {
@@ -60,8 +61,8 @@ export class PaiementService {
                 description,
               },
             ],
-            success_url: `${frontendUrl}/paiement/succes`,
-            error_url: `${frontendUrl}/paiement/erreur`,
+            success_url: `${frontendUrl}/paiement/succes?reservationId=${reservationId}`,
+            error_url: `${frontendUrl}/paiement/erreur?reservationId=${reservationId}`,
             is_escrow: false,
           },
         }),
