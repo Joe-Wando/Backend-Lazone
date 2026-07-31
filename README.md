@@ -23,9 +23,9 @@ Projet d'examen final — Licence 2 Génie Informatique, 2025-2026.
 
 | Nom | Rôle |
 |---|---|
-| Jonathan Wando | Chef de projet — auth, users, configuration, monitoring |
-| Coumba BA | Films, cinémas, salles, séances, documentation |
-| Précieux NZINOUNOU | Réservations, tickets, tests |
+| Jonathan Wando | Chef de projet — auth, users, films, cinémas, salles, séances, réservations, tickets, paiement, monitoring |
+| Coumba BA | Documentation |
+| Précieux NZINOUNOU | Tests |
 
 ## Installation
 
